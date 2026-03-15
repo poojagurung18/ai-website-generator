@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
         const response = await axios.post(
             "https://openrouter.ai/api/v1/chat/completions",
             {
-                model: "google/gemini-2.5-flash-preview-09-2025", // or any OpenRouter-supported model
+                model: "google/gemini-3.1-flash-lite-preview", // or any OpenRouter-supported model
                 messages,
                 stream: true, // enable streaming
                 max_tokens: 2000,

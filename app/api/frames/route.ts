@@ -17,7 +17,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // ✅ Convert to number
     const frameId = Number(frameIdParam);
 
     if (isNaN(frameId)) {
@@ -27,7 +26,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // ✅ Frame query (SAFE)
     const frameResult = await db
       .select()
       .from(frameTable)
@@ -46,7 +44,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // ✅ Chat query (SAFE)
     const chatResult = await db
       .select()
       .from(chatTable)
@@ -67,4 +64,13 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function PUT(req: NextRequest) {
+  const {designCode, frameId, projectId}= await req.json();
+  const result = await db.update(frameTable).set({
+    designCode: designCode
+  }).where(and(eq(frameTable.frameId, frameId), eq(frameTable.projectId, projectId)));
+
+  return NextResponse.json({result: 'Updated!'});
 }
