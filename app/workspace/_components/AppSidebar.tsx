@@ -26,7 +26,7 @@ export function AppSidebar() {
   const {has}= useAuth();
   useEffect(() => {
     GetProjectList();
-  })
+  }, [])
   const GetProjectList= async ()=> {
     setLoading(true);
     const result = await axios.get('/api/get-all-projects');
