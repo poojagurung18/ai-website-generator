@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+AI Website Generator
 
-## Getting Started
+A Next.js application that allows users to generate and customize websites using AI-powered tools.
 
-First, run the development server:
+Live Link: https://ai-website-generator-khaki.vercel.app/
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Features:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+AI Image Tools: Generate images from prompts and apply AI transformations (background removal, upscaling).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Workspace: A real-time playground to edit and preview website components.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Project Management: Save and organize multiple projects in a personal dashboard.
 
-## Learn More
+Auth & Credits: Secure login via Clerk and a credit-based system for AI usage.
 
-To learn more about Next.js, take a look at the following resources:
+Tech Stack:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Framework: Next.js 15
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Authentication: Clerk
 
-## Deploy on Vercel
+Database: PostgreSQL with Drizzle ORM
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Images: ImageKit.io
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+UI: Tailwind CSS and Shadcn/UI
+
+Local Setup
+
+Clone the repo:
+
+git clone https://github.com/poojagurung18/ai-website-generator.git
+
+cd ai-website-generator
+
+Install dependencies:
+
+npm install
+
+Environment Variables:
+
+Create a .env.local file with the following keys:
+
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
+CLERK_SECRET_KEY
+
+DATABASE_URL
+
+NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY
+
+NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+
+IMAGEKIT_PRIVATE_KEY
+
