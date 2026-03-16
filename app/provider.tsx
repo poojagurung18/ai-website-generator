@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useUser } from '@clerk/nextjs';
 import { UserDetailContext } from '@/context/UserDetailContext';
+import { OnSaveContext } from '@/context/OnSaveContext';
 
 function UserDetailProvider({
   children,
@@ -12,6 +13,7 @@ function UserDetailProvider({
 }) {
   const { user } = useUser();
   const [userDetail, setUserDetail] = useState<any>(null);
+  const [onSaveData, setOnSaveData] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -35,7 +37,9 @@ function UserDetailProvider({
 
   return (
     <UserDetailContext.Provider value={{ userDetail, setUserDetail }}>
+      <OnSaveContext.Provider value={{ onSaveData, setOnSaveData }}>
       {children}
+      </OnSaveContext.Provider>
     </UserDetailContext.Provider>
   );
 }

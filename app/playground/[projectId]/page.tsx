@@ -175,7 +175,6 @@ function PlayGround
             loading={loading}
             />
             <WebsiteDesgin generatedCode={generatedCode?.replace('```','')}/>
-            {/* <ElementSettingSection /> */}
         </div>
     </div>
   )
