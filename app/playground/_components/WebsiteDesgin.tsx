@@ -47,7 +47,7 @@ function WebsiteDesign({ generatedCode }: Props) {
     const doc = iframe.contentDocument || iframe.contentWindow?.document;
     if (!doc) return;
 
-    if (doc.innerHTML === "" || !doc.getElementById("root")) {
+    if (doc.body.innerHTML === "" || !doc.getElementById("root")) {
       doc.open();
       doc.write(HTML_SHELL_HEAD);
       doc.close();
@@ -160,7 +160,7 @@ function WebsiteDesign({ generatedCode }: Props) {
   return (
     <div className="flex gap-2 w-full">
       <div className="p-5 w-full flex items-center flex-col">
-        <div className={`transition-all duration-300 ${selectedScreenSize === 'web' ? 'w-full' : 'w-[400px]'} border-2 rounded-xl overflow-hidden shadow-lg`}>
+        <div className={`transition-all duration-300 ${selectedScreenSize === 'web' ? 'w-full' : 'w-100'} border-2 rounded-xl overflow-hidden shadow-lg`}>
           <iframe
             ref={iframeRef}
             className="w-full h-150 bg-white"
