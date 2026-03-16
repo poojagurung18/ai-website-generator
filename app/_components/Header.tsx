@@ -24,7 +24,9 @@ function Header() {
     return (
         <div className='flex items-center justify-between p-4 shadow'>
         <div className='flex gap-2 items-center'>
+            <Link href={'/'}>
             <Image src={'/logo.svg'} alt='logo' width={35} height={35}/>
+            </Link>
             <h2 className='font-bold text-2xl'>AI Website Generator </h2>
         </div>
         <div className='flex gap-3'>
