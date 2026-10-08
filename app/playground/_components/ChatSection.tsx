@@ -6,7 +6,7 @@ import { ArrowUp } from 'lucide-react'
 
 type Props = {
   messages: Messages[],
-  onSend: any,
+  onSend: (input: string) => void,
   loading: boolean
 }
 

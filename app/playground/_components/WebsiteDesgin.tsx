@@ -3,7 +3,6 @@ import WebPageTools from "./WebPageTools";
 import ElementSettingSection from "./ElementSettingSection";
 import ImageSettingSection from "./ImageSettingsSection";
 import { OnSaveContext } from "@/context/OnSaveContext";
-import { on } from "events";
 import axios from "axios";
 import DOMPurify from "dompurify";
 import { toast } from "sonner";
@@ -36,7 +35,7 @@ function WebsiteDesign({ generatedCode }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [selectedScreenSize, setSelectedScreenSize] = useState("web");
   const [selectedElement, setSelectedElement] = useState<HTMLElement|null>();
-  const {onSaveData, setOnSaveData} = useContext(OnSaveContext);
+  const {onSaveData} = useContext(OnSaveContext);
   const {projectId} = useParams();
   const params = useSearchParams();
   const frameId = params.get('frameId');
@@ -60,7 +59,7 @@ function WebsiteDesign({ generatedCode }: Props) {
     const cleanCode = generatedCode
       .replaceAll("```html", "")
       .replaceAll("```", "")
-      .replace("html", "") ?? "";
+      .replace(/^\s*html\s*/, "");
     
     root.innerHTML = DOMPurify.sanitize(cleanCode);
 
@@ -142,18 +141,16 @@ function WebsiteDesign({ generatedCode }: Props) {
             el.style.cursor='';
           })
           const html = cloneDoc.outerHTML;
-          console.log("HTML to save", html);
 
-          const result=await axios.put('/api/frames', {
+          await axios.put('/api/frames', {
             designCode: html,
             frameId: frameId,
             projectId: projectId
           });
-          console.log(result.data);
           toast.success("Saved")
         }
-      } catch(err) {
-        
+      } catch {
+        toast.error("Failed to save");
       }
   }
   }
@@ -175,11 +172,8 @@ function WebsiteDesign({ generatedCode }: Props) {
           generatedCode={generatedCode}
         />
       </div>
-      {/* @ts-ignore */}
-      {/* <ElementSettingSection selectedEl={selectedElement} clearSelection={()=>setSelectedElement(null)}/> */}
       {selectedElement?.tagName=='IMG'? (
-      // @ts-ignore
-      <ImageSettingSection selectedEl={selectedElement}/>
+      <ImageSettingSection selectedEl={selectedElement as HTMLImageElement}/>
       ):selectedElement?(<ElementSettingSection selectedEl={selectedElement} clearSelection={()=>setSelectedElement(null)}/>
       ):null}
     </div>

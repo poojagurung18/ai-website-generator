@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
-function ViewCodeBlock({children, code}: any) {
+function ViewCodeBlock({children, code}: { children: React.ReactNode, code: string }) {
   const handleCopy=async()=>{
     await navigator.clipboard.writeText(code);
     toast.success('Code Copied!');

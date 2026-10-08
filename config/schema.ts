@@ -1,4 +1,3 @@
-import { id } from "date-fns/locale";
 import { integer, json, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
@@ -10,24 +9,24 @@ export const usersTable = pgTable("users", {
 
 export const projectTable = pgTable("projects", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  projectId: varchar(),
+  projectId: varchar().notNull().unique(),
   createdBy: varchar().references(()=>usersTable.email),
   createdOn: timestamp().defaultNow()
 });
 
 export const frameTable= pgTable('frames',{
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  frameId: varchar(),
+  frameId: varchar().notNull().unique(),
   designCode: text(),
-  projectId: varchar().references(()=>projectTable.projectId),
+  projectId: varchar().notNull().references(()=>projectTable.projectId),
   createdOn: timestamp().defaultNow()
 })
 
+// One chat history per frame
 export const chatTable = pgTable('chats',{
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   chatMessage: json(),
-  frameId: varchar().references(()=>frameTable.frameId),
+  frameId: varchar().unique().references(()=>frameTable.frameId),
   createdBy: varchar().references(()=>usersTable.email),
   createdOn: timestamp().defaultNow()
 })
-

@@ -13,25 +13,36 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { UserDetailContext } from "@/context/UserDetailContext"
 import { useAuth, UserButton } from "@clerk/nextjs"
 import axios from "axios"
-import { set } from "date-fns"
 import Image from "next/image"
 import Link from "next/link"
 import { useContext, useEffect, useState } from "react"
-import { fromTheme } from "tailwind-merge"
+
+// Credits given to every new user (see /api/users); used to scale the progress bar
+const FREE_CREDITS = 2;
+
+type ProjectListItem = {
+  projectId: string,
+  frameId: string,
+  chats: { chatMessage: { content: string }[] | null }[]
+}
 
 export function AppSidebar() {
-  const [projectList, setProjectList] = useState([]);
-  const {userDetail, setUserDetail} = useContext(UserDetailContext);
-  const [loading, setLoading] = useState(false);
+  const [projectList, setProjectList] = useState<ProjectListItem[]>([]);
+  const {userDetail} = useContext(UserDetailContext);
+  const [loading, setLoading] = useState(true);
   const {has}= useAuth();
   useEffect(() => {
     GetProjectList();
   }, [])
   const GetProjectList= async ()=> {
-    setLoading(true);
-    const result = await axios.get('/api/get-all-projects');
-    setProjectList(result.data);
-    setLoading(false);
+    try {
+      const result = await axios.get<ProjectListItem[]>('/api/get-all-projects');
+      setProjectList(result.data);
+    } catch (e) {
+      console.error('Failed to load projects', e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const hasUnlimitedCredits = has&&has({ plan: 'unlimited'});
@@ -51,28 +62,28 @@ export function AppSidebar() {
       <SidebarContent className="p-2">
         <SidebarGroup>
             <SidebarGroupLabel>Projects</SidebarGroupLabel>
-            {!loading && projectList.length == 0 && 
+            {!loading && projectList.length == 0 &&
             <h2 className="text-sm px-2 text-gray-500">No Projects Found</h2>
             }
             <div>
-              {(!loading && projectList.length>0) ? projectList.map((project: any, index) => (
-                <Link href={`/playground/${project.projectId}?frameId=${project.frameId}`} key={index} className="my-2 hover:bg-secondary p-2 rounded-lg cursor-pointer">
-                  <h2 className="line-clamp-1 p-1">{project.chats[0].chatMessage[0]?.content}</h2>
-                </Link>
-              )):
+              {loading ?
               [1,2,3,4,5].map((i)=>(
-                <Skeleton className="w-full h-10 rounded-lg mt-2"/>
+                <Skeleton key={i} className="w-full h-10 rounded-lg mt-2"/>
+              )) :
+              projectList.map((project) => (
+                <Link href={`/playground/${project.projectId}?frameId=${project.frameId}`} key={project.frameId} className="my-2 hover:bg-secondary p-2 rounded-lg cursor-pointer">
+                  <h2 className="line-clamp-1 p-1">{project.chats[0]?.chatMessage?.[0]?.content ?? 'Untitled project'}</h2>
+                </Link>
               ))
               }
             </div>
         </SidebarGroup>
-        <SidebarGroup />
       </SidebarContent>
       <SidebarFooter className="p-2">
         {!hasUnlimitedCredits && <div className="p-3 border rounded-xl space-y-3 bg-secondary">
             <h2 className="flex justify-between items-center">Remaining Credits <span className="font-bold">{userDetail?.credits}</span></h2>
-            <Progress value={userDetail?.credits/2*100} />
-            <Link href={'workspace/pricing'} className="w-full">
+            <Progress value={Math.min(100, (userDetail?.credits ?? 0) / FREE_CREDITS * 100)} />
+            <Link href={'/workspace/pricing'} className="w-full">
             <Button className="w-full">
                 Upgrade to Unlimited
             </Button>

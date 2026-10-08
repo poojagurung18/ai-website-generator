@@ -1,56 +1,39 @@
 import { db } from "@/config/db";
-import { currentUser } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
-import { eq, inArray, desc } from "drizzle-orm"; 
+import { getUserEmail, unauthorized } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { and, eq, inArray, desc } from "drizzle-orm";
 import { chatTable, frameTable, projectTable } from "@/config/schema";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const user = await currentUser();
+    const email = await getUserEmail();
+    if (!email) return unauthorized();
 
-    // 1. Check if user exists to prevent crashes
-    if (!user || !user.primaryEmailAddress?.emailAddress) {
-       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // 2. Fetch projects
-    const projects = await db
-      .select()
+    // Every frame of every project owned by the user, newest project first
+    const frames = await db
+      .select({ projectId: projectTable.projectId, frameId: frameTable.frameId })
       .from(projectTable)
-      .where(eq(projectTable.createdBy, user.primaryEmailAddress.emailAddress))
+      .innerJoin(frameTable, eq(frameTable.projectId, projectTable.projectId))
+      .where(eq(projectTable.createdBy, email))
       .orderBy(desc(projectTable.id));
 
-    let results = [];
-
-    for (const project of projects) {
-      const frames = await db
-        .select({ frameId: frameTable.frameId })
-        .from(frameTable)
-        //@ts-ignore
-        .where(eq(frameTable.projectId, project.projectId));
-
-      const frameIds = frames.map((f: any) => f.frameId);
-      
-      let chats: any[] = [];
-      if (frameIds.length > 0) {
-        chats = await db
+    const frameIds = frames.map((f) => f.frameId);
+    const chats = frameIds.length
+      ? await db
           .select()
           .from(chatTable)
-          .where(inArray(chatTable.frameId, frameIds));
-      }
+          .where(and(inArray(chatTable.frameId, frameIds), eq(chatTable.createdBy, email)))
+      : [];
 
-      for (const frame of frames) {
-        results.push({
-          projectId: project.projectId ?? '',
-          frameId: frame.frameId ?? '',
-          chats: chats.filter((c) => c.frameId === frame.frameId),
-        });
-      }
-    }
+    const results = frames.map((frame) => ({
+      projectId: frame.projectId,
+      frameId: frame.frameId,
+      chats: chats.filter((c) => c.frameId === frame.frameId),
+    }));
 
     return NextResponse.json(results);
   } catch (error) {
-    console.error("API Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("GET /api/get-all-projects error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

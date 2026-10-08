@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { UserDetailContext } from '@/context/UserDetailContext'
 import { SignInButton, useAuth, useUser } from '@clerk/nextjs'
 import axios from 'axios'
-import { ArrowUp, HomeIcon, ImagePlus, ImagePlusIcon, Key, LayoutDashboard, Loader2Icon, User } from 'lucide-react'
+import { ArrowUp, HomeIcon, ImagePlus, Key, LayoutDashboard, Loader2Icon, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useContext, useState } from 'react'
 import { toast } from 'sonner'
@@ -42,7 +42,7 @@ function Hero() {
   const hasUnlimitedCredits = has&&has({ plan: 'unlimited'});
 
   const CreateNewProject= async() => {
-    if(!hasUnlimitedCredits && userDetail?.credits<=0) {
+    if(!hasUnlimitedCredits && userDetail && (userDetail.credits ?? 0) <= 0) {
       toast.error('You have no remaining credits. Please upgrade your plan to create more projects.');
       return;
     }
@@ -55,9 +55,9 @@ function Hero() {
       toast.success('Project Created');
       router.push(`/playground/${projectId}?frameId=${frameId}`)
       if (!hasUnlimitedCredits) {
-        setUserDetail((prev:any)=> ({
+        setUserDetail((prev)=> prev && ({
           ...prev,
-          credits: prev.credits-1
+          credits: (prev.credits ?? 0) - 1
         }))
       }
       setLoading(false);
@@ -65,7 +65,6 @@ function Hero() {
       toast.error(axios.isAxiosError(e) && e.response?.status === 403
         ? 'You have no remaining credits. Please upgrade your plan to create more projects.'
         : 'Internal server error');
-      console.log(e);
       setLoading(false);
     }
   }

@@ -3,7 +3,6 @@ import React, { useRef, useState } from "react";
 import {
   Image as ImageIcon,
   Crop,
-  Expand,
   Image as ImageUpscale, // no lucide-react upscale, using Image icon
   ImageMinus,
   Loader2Icon,
@@ -33,25 +32,18 @@ const transformOptions = [
 
 function ImageSettingSection({ selectedEl }: Props) {
   const [altText, setAltText] = useState(selectedEl.alt || "");
-  const [width, setWidth] = useState<number>(selectedEl.width || 300);
-  const [height, setHeight] = useState<number>(selectedEl.height || 200);
   const [selectedImage, setSelectedImage] = useState<File>();
   const [loading, setLoading] = useState<boolean>(false);
   const [borderRadius, setBorderRadius] = useState(
     selectedEl.style.borderRadius || "0px"
   );
   const [preview, setPreview] = useState(selectedEl.src || "");
-  const [activeTransforms, setActiveTransforms] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Toggle transform
-  const toggleTransform = (value: string) => {
-    setActiveTransforms((prev) =>
-      prev.includes(value)
-        ? prev.filter((t) => t !== value)
-        : [...prev, value]
-    );
-  };
+  const updateImageSrc = (url: string) => {
+    setPreview(url);
+    selectedEl.setAttribute('src', url);
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,8 +64,9 @@ function ImageSettingSection({ selectedEl }: Props) {
         const formData = new FormData();
         formData.append("file", selectedImage);
         const result = await axios.post("/api/upload-image", formData);
-        selectedEl.setAttribute('src', result.data.url+"?tr=")
-      } catch (e) {
+        // "?tr=" lets ImageKit transformations be appended later
+        updateImageSrc(result.data.url+"?tr=");
+      } catch {
         toast.error("Image upload failed");
       }
       setLoading(false);
@@ -86,24 +79,21 @@ function ImageSettingSection({ selectedEl }: Props) {
 
   const GenerateAIImage= ()=> {
     setLoading(true);
-    const url = `https://ik.imagekit.io/25gimfulj/ik-genimg-prompt-${altText}/${Date.now()}.png?tr=`;
-    setPreview(url);
-    selectedEl.setAttribute('src',url)
+    updateImageSrc(`${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}/ik-genimg-prompt-${encodeURIComponent(altText)}/${Date.now()}.png?tr=`);
   }
 
+  // Toggles an ImageKit transformation in the URL's ?tr= list
   const ApplyTransformation= (trValue: string)=> {
-    setLoading(true);
-    if(preview.includes(trValue)) {
-      const url = preview+ trValue + ','
-      setPreview(url);
-      selectedEl.setAttribute('src', url)
-    } else {
-      const url= preview.replaceAll(trValue+',', "");
-      setPreview(url);
-      selectedEl.setAttribute('src', url)
+    if (!preview.includes('?tr=')) {
+      toast.error("Upload or generate an image first to apply AI transforms");
+      return;
     }
-
-    
+    setLoading(true);
+    if(preview.includes(trValue + ',')) {
+      updateImageSrc(preview.replaceAll(trValue + ',', ''));
+    } else {
+      updateImageSrc(preview + trValue + ',');
+    }
   }
 
   return (
@@ -120,6 +110,7 @@ function ImageSettingSection({ selectedEl }: Props) {
         className="max-h-40 object-contain border rounded cursor-pointer hover:opacity-80"
         onClick={openFileDialog}
         onLoad={()=>setLoading(false)}
+        onError={()=>setLoading(false)}
       />
     </div>
 
@@ -165,13 +156,12 @@ function ImageSettingSection({ selectedEl }: Props) {
       <div className="flex gap-2 flex-wrap">
         <TooltipProvider>
           {transformOptions.map((opt) => {
-            const applied = activeTransforms.includes(opt.value);
             return (
               <Tooltip key={opt.value}>
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant={preview.includes(opt.transformation) ? 'default' : 'outline'}
+                    variant={preview.includes(opt.transformation + ",") ? 'default' : 'outline'}
                     className="flex items-center justify-center p-2"
                     onClick={() => ApplyTransformation(opt.transformation)}
                   >
@@ -179,7 +169,7 @@ function ImageSettingSection({ selectedEl }: Props) {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {opt.label} {applied && "(Applied)"}
+                  {opt.label} {preview.includes(opt.transformation + ",") && "(Applied)"}
                 </TooltipContent>
               </Tooltip>
             );
@@ -187,29 +177,6 @@ function ImageSettingSection({ selectedEl }: Props) {
         </TooltipProvider>
       </div>
     </div>
-    {/* Conditional Resize Inputs */}
-        {activeTransforms.includes("resize") && (
-        <div className="flex gap-2">
-            <div className="flex-1">
-            <label className="text-sm">Width</label>
-            <Input
-                type="number"
-                value={width}
-                onChange={(e) => setWidth(Number(e.target.value))}
-                className="mt-1"
-            />
-            </div>
-            <div className="flex-1">
-            <label className="text-sm">Height</label>
-            <Input
-                type="number"
-                value={height}
-                onChange={(e) => setHeight(Number(e.target.value))}
-                className="mt-1"
-            />
-            </div>
-        </div>
-        )}
 
         {/* Border Radius */}
         <div>
@@ -217,7 +184,7 @@ function ImageSettingSection({ selectedEl }: Props) {
       <Input
         type="text"
         value={borderRadius}
-        onChange={(e) => setBorderRadius(e.target.value)}
+        onChange={(e) => { setBorderRadius(e.target.value); selectedEl.style.borderRadius = e.target.value; }}
         placeholder="e.g. 8px or 50%"
         className="mt-1"
       />

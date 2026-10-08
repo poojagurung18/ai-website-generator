@@ -2,7 +2,6 @@ import { AlignCenter, AlignLeft, AlignRight, SwatchBook } from 'lucide-react'
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -26,7 +25,7 @@ function ElementSettingSection({selectedEl, clearSelection}: Props) {
 
   const applyStyle = (property: string, value: string) => {
     if (selectedEl) {
-      selectedEl.style[property as any] = value;
+      (selectedEl.style as unknown as Record<string, string>)[property] = value;
     }
   };
 

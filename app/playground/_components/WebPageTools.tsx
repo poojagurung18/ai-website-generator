@@ -28,16 +28,20 @@ const HTML_CODE = `<!DOCTYPE html>
     {code}
 </body>
 </html>`
-function WebPageTools({selectedScreenSize, setselectedScreenSize, generatedCode}: any) {
+type Props = {
+  selectedScreenSize: string,
+  setselectedScreenSize: (size: string) => void,
+  generatedCode: string
+}
+
+function WebPageTools({selectedScreenSize, setselectedScreenSize, generatedCode}: Props) {
   
-  const [finalCode, setFinalCode] = useState<string>();
+  const [finalCode, setFinalCode] = useState<string>('');
 
   useEffect(()=> {
-    const cleanCode=(HTML_CODE.replace('{code}', generatedCode) || '')
-    .replaceAll("```html", '')
-    .replace('```', '')
-    .replaceAll('html', '')
-    setFinalCode(cleanCode);
+    // Strip markdown fences from the AI output only, not from the surrounding HTML template
+    const body = (generatedCode || '').replaceAll("```html", '').replaceAll('```', '');
+    setFinalCode(HTML_CODE.replace('{code}', () => body));
   }, [generatedCode])
 
   const ViewInNewTab = () => {

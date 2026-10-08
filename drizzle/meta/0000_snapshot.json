@@ -1,9 +1,247 @@
 {
-  "id": "f5aa6d83-9779-4ded-af13-e5fc69e266dc",
+  "id": "f10e56f9-b1b2-4a59-b6dd-dc0e6b5de9f0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.chats": {
+      "name": "chats",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "chats_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "chatMessage": {
+          "name": "chatMessage",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "frameId": {
+          "name": "frameId",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdBy": {
+          "name": "createdBy",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdOn": {
+          "name": "createdOn",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "chats_frameId_frames_frameId_fk": {
+          "name": "chats_frameId_frames_frameId_fk",
+          "tableFrom": "chats",
+          "tableTo": "frames",
+          "columnsFrom": [
+            "frameId"
+          ],
+          "columnsTo": [
+            "frameId"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "chats_createdBy_users_email_fk": {
+          "name": "chats_createdBy_users_email_fk",
+          "tableFrom": "chats",
+          "tableTo": "users",
+          "columnsFrom": [
+            "createdBy"
+          ],
+          "columnsTo": [
+            "email"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "chats_frameId_unique": {
+          "name": "chats_frameId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "frameId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.frames": {
+      "name": "frames",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "frames_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "frameId": {
+          "name": "frameId",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "designCode": {
+          "name": "designCode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "projectId": {
+          "name": "projectId",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdOn": {
+          "name": "createdOn",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "frames_projectId_projects_projectId_fk": {
+          "name": "frames_projectId_projects_projectId_fk",
+          "tableFrom": "frames",
+          "tableTo": "projects",
+          "columnsFrom": [
+            "projectId"
+          ],
+          "columnsTo": [
+            "projectId"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "frames_frameId_unique": {
+          "name": "frames_frameId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "frameId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.projects": {
+      "name": "projects",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "projects_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "projectId": {
+          "name": "projectId",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdBy": {
+          "name": "createdBy",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdOn": {
+          "name": "createdOn",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "projects_createdBy_users_email_fk": {
+          "name": "projects_createdBy_users_email_fk",
+          "tableFrom": "projects",
+          "tableTo": "users",
+          "columnsFrom": [
+            "createdBy"
+          ],
+          "columnsTo": [
+            "email"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "projects_projectId_unique": {
+          "name": "projects_projectId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "projectId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.users": {
       "name": "users",
       "schema": "",
