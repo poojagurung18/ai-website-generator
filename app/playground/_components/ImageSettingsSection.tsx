@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import ImageKit from "imagekit";
+import axios from "axios";
+import { toast } from "sonner";
 import {
   Tooltip,
   TooltipContent,
@@ -29,12 +30,6 @@ const transformOptions = [
   { label: "Upscale", value: "upscale", icon: <ImageUpscale />, transformation: 'e-upscale' },
   { label: "BG Remove", value: "bgremove", icon: <ImageMinus />, transformation: 'e-bgremove'},
 ];
-
-var imagekit = new ImageKit({
-    publicKey : process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-    privateKey : process.env.NEXT_PUBLIC_IMAGEKIT_PRIVATE_KEY!,
-    urlEndpoint : process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!
-});
 
 function ImageSettingSection({ selectedEl }: Props) {
   const [altText, setAltText] = useState(selectedEl.alt || "");
@@ -73,16 +68,15 @@ function ImageSettingSection({ selectedEl }: Props) {
   const saveUploadedFile = async ()=> {
     if(selectedImage){
       setLoading(true);
-      const imageRef=await imagekit.upload({
-        //@ts-ignore
-      file: selectedImage,
-      fileName: Date.now()+".png",
-      isPublished:true
-    })
-    console.log(imageRef);
-    //@ts-ignore
-    selectedEl.setAttribute('src',imageRef?.url+"?tr=")
-    setLoading(false);
+      try {
+        const formData = new FormData();
+        formData.append("file", selectedImage);
+        const result = await axios.post("/api/upload-image", formData);
+        selectedEl.setAttribute('src', result.data.url+"?tr=")
+      } catch (e) {
+        toast.error("Image upload failed");
+      }
+      setLoading(false);
     }
   }
 

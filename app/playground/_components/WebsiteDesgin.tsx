@@ -5,6 +5,7 @@ import ImageSettingSection from "./ImageSettingsSection";
 import { OnSaveContext } from "@/context/OnSaveContext";
 import { on } from "events";
 import axios from "axios";
+import DOMPurify from "dompurify";
 import { toast } from "sonner";
 import { useParams, useSearchParams } from "next/navigation";
 
@@ -61,7 +62,7 @@ function WebsiteDesign({ generatedCode }: Props) {
       .replaceAll("```", "")
       .replace("html", "") ?? "";
     
-    root.innerHTML = cleanCode;
+    root.innerHTML = DOMPurify.sanitize(cleanCode);
 
     let hoverEl: HTMLElement | null = null;
     let selectedEl: HTMLElement | null = null;

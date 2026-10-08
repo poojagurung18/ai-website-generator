@@ -1,55 +1,42 @@
 import { db } from "@/config/db";
 import { chatTable, frameTable } from "@/config/schema";
+import { getUserEmail, notFound, ownsFrame, unauthorized } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
+    const email = await getUserEmail();
+    if (!email) return unauthorized();
+
     const { searchParams } = new URL(req.url);
 
-    const frameIdParam = searchParams.get("frameId");
+    const frameId = searchParams.get("frameId");
     const projectId = searchParams.get("projectId");
 
-    if (!frameIdParam || !projectId) {
+    if (!frameId || !projectId) {
       return NextResponse.json(
         { error: "frameId and projectId are required" },
         { status: 400 }
       );
     }
 
-    const frameId = Number(frameIdParam);
-
-    if (isNaN(frameId)) {
-      return NextResponse.json(
-        { error: "Invalid frameId" },
-        { status: 400 }
-      );
-    }
+    if (!(await ownsFrame(email, projectId, frameId))) return notFound();
 
     const frameResult = await db
       .select()
       .from(frameTable)
       .where(
         and(
-        //@ts-ignore
           eq(frameTable.frameId, frameId),
           eq(frameTable.projectId, projectId)
         )
       );
 
-    if (!frameResult.length) {
-      return NextResponse.json(
-        { error: "Frame not found" },
-        { status: 404 }
-      );
-    }
-
     const chatResult = await db
       .select()
       .from(chatTable)
-      //@ts-ignore
-      .where(eq(chatTable.frameId, frameId));
-    console.log("DB Chat Result:", chatResult); 
+      .where(and(eq(chatTable.frameId, frameId), eq(chatTable.createdBy, email)));
 
     const finalResult = {
       ...frameResult[0],
@@ -67,10 +54,23 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const {designCode, frameId, projectId}= await req.json();
-  const result = await db.update(frameTable).set({
-    designCode: designCode
-  }).where(and(eq(frameTable.frameId, frameId), eq(frameTable.projectId, projectId)));
+  try {
+    const email = await getUserEmail();
+    if (!email) return unauthorized();
 
-  return NextResponse.json({result: 'Updated!'});
+    const { designCode, frameId, projectId } = await req.json();
+    if (typeof designCode !== "string") {
+      return NextResponse.json({ error: "Invalid designCode" }, { status: 400 });
+    }
+    if (!(await ownsFrame(email, projectId, frameId))) return notFound();
+
+    await db.update(frameTable).set({
+      designCode: designCode
+    }).where(and(eq(frameTable.frameId, String(frameId)), eq(frameTable.projectId, projectId)));
+
+    return NextResponse.json({ result: 'Updated!' });
+  } catch (error) {
+    console.error("PUT /api/frames error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

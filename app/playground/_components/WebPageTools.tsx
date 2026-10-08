@@ -44,9 +44,14 @@ function WebPageTools({selectedScreenSize, setselectedScreenSize, generatedCode}
     if(!finalCode) return;
     
 
-    const blob = new Blob([finalCode??''], {type:'text/html'});
+    // blob: URLs inherit our origin, so render the generated page inside a sandboxed
+    // iframe (opaque origin) to keep its scripts away from the user's session.
+    const escaped = finalCode.replaceAll('&', '&amp;').replaceAll('"', '&quot;');
+    const wrapper = `<!DOCTYPE html><html><head><title>Preview</title></head>
+<body style="margin:0"><iframe sandbox="allow-scripts allow-forms allow-popups" srcdoc="${escaped}" style="border:0;width:100vw;height:100vh"></iframe></body></html>`;
+    const blob = new Blob([wrapper], {type:'text/html'});
     const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
+    window.open(url, "_blank", "noopener");
   }  
 
   const downloadCode = ()=> {

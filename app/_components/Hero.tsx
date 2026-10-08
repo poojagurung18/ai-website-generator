@@ -7,7 +7,6 @@ import { ArrowUp, HomeIcon, ImagePlus, ImagePlusIcon, Key, LayoutDashboard, Load
 import { useRouter } from 'next/navigation'
 import React, { useContext, useState } from 'react'
 import { toast } from 'sonner'
-import { v4 as uuidv4 } from 'uuid'
 
 const suggestions = [
   {
@@ -32,13 +31,8 @@ const suggestions = [
   }
 ]
 
-const generateRandomFrameNumber = () => {
-  const num = Math.floor(Math.random()*10000);
-  return num;
-}
-
 function Hero() {
-  const user = useUser();
+  const { user } = useUser();
   const [userInput, setUserInput] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
@@ -53,31 +47,24 @@ function Hero() {
       return;
     }
     setLoading(true);
-    const projectId = uuidv4();
-    const frameId = generateRandomFrameNumber();
-    const messages= [
-      {
-        role:'user',
-        content: userInput
-      }
-    ]
     try{
       const result = await axios.post('/api/projects',{
-        projectId: projectId,
-        frameId: frameId,
-        messages: messages,
-        credits: userDetail?.credits
+        userInput: userInput
       });
-      console.log(result.data);
+      const { projectId, frameId } = result.data;
       toast.success('Project Created');
       router.push(`/playground/${projectId}?frameId=${frameId}`)
-      setUserDetail((prev:any)=> ({
-        ...prev,
-        credits: prev.credits-1
-      }))
+      if (!hasUnlimitedCredits) {
+        setUserDetail((prev:any)=> ({
+          ...prev,
+          credits: prev.credits-1
+        }))
+      }
       setLoading(false);
     } catch(e) {
-      toast.error('Internal server error');
+      toast.error(axios.isAxiosError(e) && e.response?.status === 403
+        ? 'You have no remaining credits. Please upgrade your plan to create more projects.'
+        : 'Internal server error');
       console.log(e);
       setLoading(false);
     }

@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
+import { getUserEmail, notFound, ownsFrame, unauthorized } from "@/lib/auth";
+import { WEBSITE_PROMPT } from "@/lib/prompt";
+
+const MAX_INPUT_LENGTH = 4000;
 
 export async function POST(req: NextRequest) {
     try {
-        const { messages } = await req.json();
+        const email = await getUserEmail();
+        if (!email) return unauthorized();
+
+        const { userInput, projectId, frameId } = await req.json();
+        if (typeof userInput !== "string" || !userInput.trim() || userInput.length > MAX_INPUT_LENGTH) {
+            return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+        }
+        // Only generate for the user's own frames, so this can't be used as an open LLM proxy
+        if (!(await ownsFrame(email, projectId, frameId))) return notFound();
+
+        const messages = [{ role: "user", content: WEBSITE_PROMPT.replace("{userInput}", userInput) }];
 
         const response = await axios.post(
             "https://openrouter.ai/api/v1/chat/completions",
